@@ -5,11 +5,26 @@
 window.workspaceTagsPage = {
   state: { data: [] },
 
+  // Role permissions
+  // Receptionists handle daily tag check-ins and releases; Management handles creation/deletion
+  WRITE_ROLES: ['CEO', 'LEAD_DEVELOPER', 'ADMIN', 'RECEPTIONIST'],
+  DELETE_ROLES: ['CEO', 'LEAD_DEVELOPER', 'ADMIN'],
+
+  canWrite() {
+    return auth.hasRole(...this.WRITE_ROLES);
+  },
+
+  canDelete() {
+    return auth.hasRole(...this.DELETE_ROLES);
+  },
+
   async render(container) {
+    const canWrite = this.canWrite();
+
     container.innerHTML = `
       <div class="page-header" style="margin-bottom:var(--space-4);">
         <div></div>
-        <button class="btn btn-primary" id="add-tag-btn">+ Add New Tag</button>
+        ${canWrite ? `<button class="btn btn-primary" id="add-tag-btn">+ Add New Tag</button>` : ''}
       </div>
       <div class="table-wrapper">
         <div id="tags-table-container">
@@ -18,7 +33,11 @@ window.workspaceTagsPage = {
       </div>
     `;
 
-    document.getElementById('add-tag-btn').addEventListener('click', () => this.openModal());
+    const addBtn = document.getElementById('add-tag-btn');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => this.openModal());
+    }
+
     await this.load();
   },
 
@@ -35,40 +54,64 @@ window.workspaceTagsPage = {
 
   renderTable() {
     const target = document.getElementById('tags-table-container');
+    const canWrite = this.canWrite();
+    const canDelete = this.canDelete();
+
     if (this.state.data.length === 0) {
-      target.innerHTML = `<div class="empty-state"><h3>No tags found</h3><p>Click "Add New Tag" to create your first physical workspace tag.</p></div>`;
+      target.innerHTML = `
+        <div class="empty-state">
+          <h3>No tags found</h3>
+          <p>${canWrite ? 'Click "Add New Tag" to create your first physical workspace tag.' : 'No workspace tags currently available.'}</p>
+        </div>
+      `;
       return;
     }
 
     target.innerHTML = `
       <table class="data-table">
-        <thead><tr><th>Tag Code</th><th>Status</th><th>Held By</th><th>Actions</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Tag Code</th>
+            <th>Status</th>
+            <th>Held By</th>
+            ${canWrite ? `<th>Actions</th>` : ''}
+          </tr>
+        </thead>
         <tbody>
           ${this.state.data.map(t => `
             <tr>
               <td style="font-family:monospace;">${t.tag_code || '—'}</td>
               <td><span class="badge ${t.is_available ? 'badge-success' : 'badge-warning'}">${t.is_available ? 'Available' : 'In Use'}</span></td>
               <td>${t.booking_customer_name || '—'}</td>
-              <td class="table-actions">
-                ${!t.is_available
-                  ? `<button class="btn btn-sm btn-secondary release-btn" data-id="${t.id}" data-tag="${t.tag_code}" data-customer="${t.booking_customer_name || 'this customer'}">Force Release</button>`
-                  : `<button class="btn btn-sm btn-danger delete-btn" data-id="${t.id}" data-tag="${t.tag_code}">Delete</button>`}
-              </td>
+              ${canWrite ? `
+                <td class="table-actions">
+                  ${!t.is_available
+                    ? `<button class="btn btn-sm btn-secondary release-btn" data-id="${t.id}" data-tag="${t.tag_code}" data-customer="${t.booking_customer_name || 'this customer'}">Force Release</button>`
+                    : (canDelete ? `<button class="btn btn-sm btn-danger delete-btn" data-id="${t.id}" data-tag="${t.tag_code}">Delete</button>` : '—')}
+                </td>
+              ` : ''}
             </tr>
           `).join('')}
         </tbody>
       </table>
     `;
 
+    if (!canWrite) return;
+
     utils.qsa('.release-btn', target).forEach(btn => {
       btn.addEventListener('click', () => this.confirmRelease(btn.dataset.id, btn.dataset.tag, btn.dataset.customer));
     });
-    utils.qsa('.delete-btn', target).forEach(btn => {
-      btn.addEventListener('click', () => this.confirmDelete(btn.dataset.id, btn.dataset.tag));
-    });
+
+    if (canDelete) {
+      utils.qsa('.delete-btn', target).forEach(btn => {
+        btn.addEventListener('click', () => this.confirmDelete(btn.dataset.id, btn.dataset.tag));
+      });
+    }
   },
 
   confirmRelease(id, tagCode, customerName) {
+    if (!this.canWrite()) return;
+
     const overlay = utils.el(`
       <div class="modal-overlay">
         <div class="modal" style="width:400px;">
@@ -99,6 +142,8 @@ window.workspaceTagsPage = {
   },
 
   confirmDelete(id, tagCode) {
+    if (!this.canDelete()) return;
+
     const overlay = utils.el(`
       <div class="modal-overlay">
         <div class="modal" style="width:400px;">
@@ -129,6 +174,8 @@ window.workspaceTagsPage = {
   },
 
   openModal() {
+    if (!this.canWrite()) return;
+
     const overlay = utils.el(`
       <div class="modal-overlay">
         <div class="modal">

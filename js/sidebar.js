@@ -4,13 +4,13 @@
 
 const SIDEBAR_LINKS = [
   { id: 'dashboard',       label: 'Dashboard',       icon: 'grid',      roles: null },
-  { id: 'bookings',        label: 'Bookings',        icon: 'calendar',  roles: null },
-  { id: 'workspace-tags',  label: 'Workspace Tags',  icon: 'tag',       roles: null },
-  { id: 'workspace-plans', label: 'Workspace Plans', icon: 'layers',    roles: null },
+  { id: 'bookings',        label: 'Bookings',        icon: 'calendar',  roles: ['CEO', 'LEAD_DEVELOPER', 'ADMIN', 'RECEPTIONIST'] },
+  { id: 'workspace-tags',  label: 'Workspace Tags',  icon: 'tag',       roles: ['CEO', 'LEAD_DEVELOPER', 'ADMIN', 'RECEPTIONIST'] },
+  { id: 'workspace-plans', label: 'Workspace Plans', icon: 'layers',    roles: ['CEO', 'LEAD_DEVELOPER', 'ADMIN', 'RECEPTIONIST'] },
   { id: 'courses',         label: 'Courses',         icon: 'book',      roles: null },
   { id: 'students',        label: 'Students',        icon: 'users',     roles: null },
   { id: 'certificates',    label: 'Certificates',    icon: 'award',     roles: null },
-  { id: 'customers',       label: 'Customers',       icon: 'user',      roles: null },
+  { id: 'customers',       label: 'Customers',       icon: 'user',      roles: ['CEO', 'LEAD_DEVELOPER', 'ADMIN', 'RECEPTIONIST'] },
   { id: 'payments',        label: 'Payments',        icon: 'credit-card', roles: ['CEO', 'LEAD_DEVELOPER', 'ADMIN'] },
   { id: 'blog',            label: 'Blog Posts',      icon: 'file-text', roles: null },
   { id: 'gallery',         label: 'Gallery',         icon: 'image',     roles: null },

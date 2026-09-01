@@ -157,6 +157,9 @@ window.staffPage = {
                 <option value="ADMIN">Admin</option>
                 <option value="RECEPTIONIST">Receptionist</option>
                 <option value="LEAD_DEVELOPER">Lead Developer</option>
+                <option value="INSTRUCTOR">Instructor</option>
+                <option value="MARKETER">Marketer</option>
+                <option value="STAFF">Staff</option>
               </select>
             </div>
             <div class="form-group">

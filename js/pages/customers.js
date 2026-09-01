@@ -9,6 +9,24 @@ window.customersPage = {
   state: { data: [] },
 
   async render(container) {
+    const currentUser = auth.getUser();
+    
+    // Check if user has permission to view customers
+    // Management and Receptionist can view all customers
+    // Instructors might need special handling (see note below)
+    const canViewCustomers = currentUser && 
+      ['CEO', 'LEAD_DEVELOPER', 'ADMIN', 'RECEPTIONIST'].includes(currentUser.role);
+
+    if (!canViewCustomers) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <h3>Access restricted</h3>
+          <p>Only management and receptionist staff can view the customer list.</p>
+        </div>
+      `;
+      return;
+    }
+
     container.innerHTML = `
       <div class="table-wrapper">
         <div class="table-toolbar">

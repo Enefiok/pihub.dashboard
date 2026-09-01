@@ -6,24 +6,16 @@ window.coursesPage = {
   state: { data: [] },
   quillInstance: null,
 
-  // ASSUMPTION: no permission class for Courses was provided.
-  // Defaulting to IsManagementOrReadOnly's rule (the "default policy for
-  // most modules" per its docstring). Confirm courses/views.py
-  // permission_classes and adjust MANAGEMENT_ROLES if it differs
-  // (e.g. if Instructors should get some access here too).
-  MANAGEMENT_ROLES: ['CEO', 'LEAD_DEVELOPER', 'ADMIN'],
-
-  canWrite() {
-    return auth.hasRole(...this.MANAGEMENT_ROLES);
-  },
-
   async render(container) {
-    const canWrite = this.canWrite();
+    const currentUser = auth.getUser();
+    const isManagement = currentUser && ['CEO', 'LEAD_DEVELOPER', 'ADMIN'].includes(currentUser.role);
+    const isInstructor = currentUser && currentUser.role === 'INSTRUCTOR';
+    const canCreate = isManagement || isInstructor;
 
     container.innerHTML = `
       <div class="page-header" style="margin-bottom:var(--space-4);">
         <div></div>
-        ${canWrite ? '<button class="btn btn-primary" id="add-course-btn">+ Add New Course</button>' : ''}
+        ${canCreate ? '<button class="btn btn-primary" id="add-course-btn">+ Add New Course</button>' : ''}
       </div>
       <div class="table-wrapper">
         <div id="courses-table-container">
@@ -32,7 +24,7 @@ window.coursesPage = {
       </div>
     `;
 
-    if (canWrite) {
+    if (canCreate) {
       document.getElementById('add-course-btn').addEventListener('click', () => this.openModal());
     }
     await this.load();
@@ -51,37 +43,55 @@ window.coursesPage = {
 
   renderTable() {
     const target = document.getElementById('courses-table-container');
-    const canWrite = this.canWrite();
-
     if (this.state.data.length === 0) {
-      target.innerHTML = `<div class="empty-state"><h3>No courses found</h3><p>${canWrite ? 'Click "Add New Course" to get started.' : 'Check back later.'}</p></div>`;
+      target.innerHTML = `<div class="empty-state"><h3>No courses found</h3><p>Click "Add New Course" to get started.</p></div>`;
       return;
     }
 
+    const currentUser = auth.getUser();
+    const isManagement = currentUser && ['CEO', 'LEAD_DEVELOPER', 'ADMIN'].includes(currentUser.role);
+    const isInstructor = currentUser && currentUser.role === 'INSTRUCTOR';
+
     target.innerHTML = `
       <table class="data-table">
-        <thead><tr><th>Title</th><th>Duration</th><th>Status</th><th>Requirements</th><th>Image</th>${canWrite ? '<th>Actions</th>' : ''}</tr></thead>
+        <thead><tr><th>Title</th><th>Duration</th><th>Status</th><th>Requirements</th><th>Image</th><th>Actions</th></tr></thead>
         <tbody>
-          ${this.state.data.map(c => `
+          ${this.state.data.map(c => {
+            // Determine if current user can edit/delete this specific course
+            let canEdit = false;
+            let canDelete = false;
+
+            if (isManagement) {
+              canEdit = true;
+              canDelete = true;
+            } else if (isInstructor) {
+              // Check if the course is assigned to this instructor
+              // Handles cases where instructor is an ID or an object
+              const instructorId = typeof c.instructor === 'object' ? c.instructor.id : c.instructor;
+              if (instructorId == currentUser.id) {
+                canEdit = true;
+                canDelete = true;
+              }
+            }
+
+            return `
             <tr>
               <td>${c.title || '—'}</td>
               <td>${c.duration || '—'}</td>
               <td><span class="badge ${utils.badgeClassForStatus(c.status)}">${c.status || '—'}</span></td>
               <td>${c.requirements ? 'Yes' : 'No'}</td>
               <td>${c.image ? `<img src="${c.image}" style="width:36px;height:36px;object-fit:cover;border-radius:6px;" />` : '—'}</td>
-              ${canWrite ? `
-                <td class="table-actions">
-                  <button class="btn btn-sm btn-secondary edit-btn" data-id="${c.id}">Edit</button>
-                  <button class="btn btn-sm btn-danger delete-btn" data-id="${c.id}">Delete</button>
-                </td>
-              ` : ''}
+              <td class="table-actions">
+                ${canEdit ? `<button class="btn btn-sm btn-secondary edit-btn" data-id="${c.id}">Edit</button>` : ''}
+                ${canDelete ? `<button class="btn btn-sm btn-danger delete-btn" data-id="${c.id}">Delete</button>` : ''}
+                ${!canEdit && !canDelete ? '<span style="color:var(--color-grey-500);font-size:var(--font-size-xs);">Read-only</span>' : ''}
+              </td>
             </tr>
-          `).join('')}
+            `;
+          }).join('')}
         </tbody>
       </table>
     `;
-
-    if (!canWrite) return;
 
     utils.qsa('.edit-btn', target).forEach(btn => {
       btn.addEventListener('click', () => {
@@ -96,7 +106,6 @@ window.coursesPage = {
   },
 
   async deleteCourse(id) {
-    if (!this.canWrite()) return; // extra guard; server enforces the real rule
     if (!confirm('Delete this course? This cannot be undone.')) return;
     try {
       await api.delete(`${CONFIG.ENDPOINTS.COURSES}${id}/`);
@@ -141,8 +150,6 @@ window.coursesPage = {
   },
 
   openModal(course = null) {
-    if (!this.canWrite()) return; // safety net — button shouldn't be reachable anyway
-
     const isEdit = !!course;
 
     const overlay = utils.el(`
