@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PIHUB — Dashboard</title>
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css" />
+  <script>
+    // Applied before first paint (right after CSS, before body renders)
+    // to avoid a flash of the wrong theme on load.
+    (function () {
+      var stored = localStorage.getItem('pihub-theme');
+      var theme = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+  <style>
+    .user-dropdown {
+      position: absolute;
+      top: calc(var(--topbar-height) - 8px);
+      right: var(--space-6);
+      background-color: var(--color-white);
+      border: 1px solid var(--color-grey-100);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      min-width: 200px;
+      z-index: 50;
+      overflow: hidden;
+    }
+    .user-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-3) var(--space-4);
+      font-size: var(--font-size-sm);
+      color: var(--color-grey-900);
+      cursor: pointer;
+    }
+    .user-dropdown-item:hover {
+      background-color: var(--color-grey-50);
+    }
+    .user-dropdown-item.danger {
+      color: var(--color-danger);
+    }
+    .user-dropdown-divider {
+      height: 1px;
+      background-color: var(--color-grey-100);
+    }
+    #theme-toggle-btn svg {
+      display: block;
+    }
+    #theme-toggle-btn .icon-moon { display: none; }
+    [data-theme="dark"] #theme-toggle-btn .icon-sun { display: none; }
+    [data-theme="dark"] #theme-toggle-btn .icon-moon { display: block; }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-brand">
+          <div class="login-logo-mark" style="width:28px;height:28px;border-radius:8px;background:var(--color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;">P</div>
+          <span>PIHUB</span>
+        </div>
+        <button class="topbar-icon-btn sidebar-close-btn" id="sidebar-close-btn" aria-label="Close menu" title="Close menu">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <nav class="sidebar-nav" id="sidebar-nav">
+        <!-- rendered by sidebar.js -->
+      </nav>
+    </aside>
+
+    <!-- Backdrop shown behind the sidebar on mobile when it's open -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+    
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" id="global-search" placeholder="Search..." />
+      </div>
+      <div class="topbar-actions">
+        <button class="topbar-icon-btn" id="menu-toggle-btn" aria-label="Toggle menu" title="Toggle menu">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
+          </svg>
+        </button>
+        <button class="topbar-icon-btn" id="theme-toggle-btn" title="Toggle dark mode">
+          <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+        <button class="topbar-icon-btn" title="Notifications">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </button>
+        <div style="position:relative;">
+          <div class="topbar-user" id="topbar-user">
+            <div class="topbar-user-avatar" id="user-avatar">--</div>
+            <div class="topbar-user-info">
+              <span class="topbar-user-name" id="user-name">—</span>
+              <span class="topbar-user-role" id="user-role">—</span>
+            </div>
+          </div>
+          <div class="user-dropdown hidden" id="user-dropdown">
+            <div class="user-dropdown-item" id="change-password-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Change Password
+            </div>
+            <div class="user-dropdown-divider"></div>
+            <div class="user-dropdown-item danger" id="logout-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Logout
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="main-content" id="main-content">
+      <div class="page-header">
+        <h1 id="page-title">Dashboard</h1>
+      </div>
+      <div id="page-body">
+        <!-- individual page modules (js/pages/*.js) render here -->
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script>
+    // Guard: kick to login if no token
+    auth.guardDashboard();
+
+    // Populate topbar user info
+    const user = auth.getUser();
+    if (user) {
+      document.getElementById('user-name').textContent = user.username || user.name || 'Staff';
+      document.getElementById('user-role').textContent = user.role || '';
+      document.getElementById('user-avatar').textContent = utils.initials(user.username || user.name || '?');
+    }
+
+    // ---------- Theme toggle ----------
+    document.getElementById('theme-toggle-btn').addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('pihub-theme', next);
+    });
+
+    // Topbar user dropdown toggle
+    const topbarUser = document.getElementById('topbar-user');
+    const userDropdown = document.getElementById('user-dropdown');
+
+    topbarUser.addEventListener('click', (e) => {
+      e.stopPropagation();
+      userDropdown.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', () => {
+      userDropdown.classList.add('hidden');
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      if (confirm('Log out of PIHUB Dashboard?')) auth.logout();
+    });
+
+    document.getElementById('change-password-btn').addEventListener('click', () => {
+      userDropdown.classList.add('hidden');
+      openChangePasswordModal();
+    });
+
+    // ---------- Change Password Modal ----------
+    // Field names match ChangePasswordSerializer: old_password, new_password,
+    // confirm_new_password.
+    function openChangePasswordModal() {
+      const overlay = utils.el(`
+        <div class="modal-overlay">
+          <div class="modal" style="width:400px;">
+            <div class="modal-header"><h2>Change Password</h2><span class="modal-close">&times;</span></div>
+            <form id="change-password-form">
+              <div class="form-group">
+                <label class="form-label">Current Password</label>
+                <input class="form-input" type="password" name="old_password" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">New Password</label>
+                <input class="form-input" type="password" name="new_password" required minlength="8" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Confirm New Password</label>
+                <input class="form-input" type="password" name="confirm_new_password" required minlength="8" />
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="change-password-cancel">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Password</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `);
+      document.body.appendChild(overlay);
+
+      overlay.querySelector('.modal-close').addEventListener('click', () => overlay.remove());
+      overlay.querySelector('#change-password-cancel').addEventListener('click', () => overlay.remove());
+
+      overlay.querySelector('#change-password-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const body = Object.fromEntries(formData.entries());
+
+        // Client-side check so a mismatch doesn't need a round trip to the server
+        if (body.new_password !== body.confirm_new_password) {
+          toast.error('New passwords do not match.');
+          return;
+        }
+
+        try {
+          await api.patch(CONFIG.ENDPOINTS.CHANGE_PASSWORD, body);
+          toast.success('Password updated successfully');
+          overlay.remove();
+        } catch (err) {
+          toast.error(err.message);
+        }
+      });
+    }
+
+    // Determine active page from ?page= query param
+    const params = new URLSearchParams(window.location.search);
+    const currentPage = params.get('page') || 'dashboard';
+
+    sidebar.render(currentPage);
+    sidebar.initToggle();
+
+    document.getElementById('page-title').textContent =
+      currentPage.charAt(0).toUpperCase() + currentPage.slice(1).replace('-', ' ');
+  </script>
+
+  <!-- Page modules (each self-registers a render function) -->
+  <script src="js/pages/dashboard-home.js"></script>
+  <script src="js/pages/bookings.js"></script>
+  <script src="js/pages/workspace-tags.js"></script>
+  <script src="js/pages/workspace-plans.js"></script>
+  <script src="js/pages/courses.js"></script>
+  <script src="js/pages/students.js"></script>
+  <script src="js/pages/certificates.js"></script>
+  <script src="js/pages/customers.js"></script>
+  <script src="js/pages/payments.js"></script>
+  <script src="js/pages/blog.js"></script>
+  <script src="js/pages/gallery.js"></script>
+  <script src="js/pages/enquiries.js"></script>
+  <script src="js/pages/newsletters.js"></script>
+  <script src="js/pages/staff.js"></script>
+
+  <script>
+    // Simple router — dispatches to the matching page module's render()
+    const PAGE_MODULES = {
+      'dashboard': window.dashboardHomePage,
+      'bookings': window.bookingsPage,
+      'workspace-tags': window.workspaceTagsPage,
+      'workspace-plans': window.workspacePlansPage,
+      'courses': window.coursesPage,
+      'students': window.studentsPage,
+      'certificates': window.certificatesPage,
+      'customers': window.customersPage,
+      'payments': window.paymentsPage,
+      'blog': window.blogPage,
+      'gallery': window.galleryPage,
+      'enquiries': window.enquiriesPage,
+      'newsletters': window.newslettersPage,
+      'staff': window.staffPage,
+    };
+
+    const activeModule = PAGE_MODULES[currentPage];
+    if (activeModule && typeof activeModule.render === 'function') {
+      activeModule.render(document.getElementById('page-body'));
+    } else {
+      document.getElementById('page-body').innerHTML =
+        '<div class="empty-state"><h3>Page not found</h3><p>This module hasn\'t been built yet.</p></div>';
+    }
+  </script>
+</body>
+</html>

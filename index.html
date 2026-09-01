@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PIHUB Dashboard</title>
+</head>
+<body>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    // Entry point — send user to the right screen based on auth state
+    if (auth.isAuthenticated()) {
+      window.location.href = 'dashboard.html';
+    } else {
+      window.location.href = 'login.html';
+    }
+  </script>
+</body>
+</html>

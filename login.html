@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PIHUB — Staff Login</title>
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <style>
+    .login-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--color-grey-50);
+      padding: var(--space-4);
+    }
+    .login-card {
+      width: 380px;
+      max-width: 100%;
+      background-color: var(--color-white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: var(--space-8);
+    }
+    .login-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-bottom: var(--space-6);
+    }
+    .login-logo-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-md);
+      background-color: var(--color-primary);
+      color: var(--color-white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: var(--font-weight-bold);
+    }
+    .login-logo span {
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-dark);
+    }
+    .login-card h1 {
+      font-size: var(--font-size-lg);
+      margin-bottom: var(--space-1);
+    }
+    .login-card p.subtitle {
+      color: var(--color-grey-500);
+      font-size: var(--font-size-sm);
+      margin-bottom: var(--space-6);
+    }
+    .login-error {
+      background-color: var(--color-danger-bg);
+      color: var(--color-danger);
+      font-size: var(--font-size-sm);
+      padding: var(--space-3);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-4);
+    }
+    .btn-block { width: 100%; }
+  </style>
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="login-logo-mark">P</div>
+        <span>PIHUB</span>
+      </div>
+      <h1>Staff Sign In</h1>
+      <p class="subtitle">Sign in with your PIHUB staff credentials.</p>
+
+      <div id="login-error" class="login-error hidden"></div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label" for="username">Username</label>
+          <input class="form-input" type="text" id="username" name="username" autocomplete="username" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input class="form-input" type="password" id="password" name="password" autocomplete="current-password" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="login-submit-btn">Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    auth.guardLogin(); // redirect to dashboard if already logged in
+
+    const form = document.getElementById('login-form');
+    const errorBox = document.getElementById('login-error');
+    const submitBtn = document.getElementById('login-submit-btn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorBox.classList.add('hidden');
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Signing in...';
+
+      try {
+        await auth.login(username, password);
+        window.location.href = 'dashboard.html';
+      } catch (err) {
+        errorBox.textContent = err.message || 'Invalid username or password.';
+        errorBox.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign In';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+/* ==========================================================================
+   PIHUB Dashboard — Page-Specific Styles
+   ========================================================================== */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-4);
+}
+
+.pagination-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-grey-700);
+}
+
+.pagination-btn:hover { background-color: var(--color-grey-50); }
+.pagination-btn.active {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+.filters-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.filters-bar .form-select,
+.filters-bar .form-input {
+  min-width: 160px;
+}
+
+.recent-activity-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.recent-activity-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--color-grey-100);
+  font-size: var(--font-size-sm);
+}
+
+.recent-activity-item:last-child { border-bottom: none; }
