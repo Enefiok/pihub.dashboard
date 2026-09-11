@@ -1,10 +1,9 @@
-/* ==========================================================================
-   PIHUB Dashboard — Configuration
-   ========================================================================== */
-
 const CONFIG = {
-  API_BASE_URL: 'https://pihub-backend.onrender.com',
- //API_BASE_URL: 'http://127.0.0.1:8000',
+  // ✅ USE THIS FOR LOCAL DEVELOPMENT
+   //   API_BASE_URL: 'http://127.0.0.1:8000',
+  
+  // ✅ UNCOMMENT THIS LINE ONLY WHEN DEPLOYING TO PRODUCTION
+   API_BASE_URL: 'https://pihub-backend.onrender.com',
 
   ENDPOINTS: {
     // Auth
@@ -36,14 +35,17 @@ const CONFIG = {
     ENQUIRIES_PUBLIC: '/api/core/enquiries/',
     ENQUIRIES_STAFF: '/api/core/staff/enquiries/',
 
-    // Newsletter — confirmed base path (registered via router in core/urls.py)
+    // Newsletter
     SUBSCRIBE: '/api/core/subscribe/',
-    UNSUBSCRIBE: '/api/core/unsubscribe/', // + <uuid:token>/
-    NEWSLETTERS: '/api/core/newsletters/', // "send" sub-route still unconfirmed — need views.py
-    SUBSCRIBERS: '/api/core/staff/subscribers/', // staff-only, confirmed via router in core/urls.py
+    UNSUBSCRIBE: '/api/core/unsubscribe/',
+    NEWSLETTERS: '/api/core/newsletters/',
+    SUBSCRIBERS: '/api/core/staff/subscribers/',
 
-    // Payments — staff list endpoint not yet built on backend
+    // Payments
     PAYMENT_WEBHOOK: '/api/payments/webhook/paystack/',
+    
+    // ✅ ADD YOUR NEW ROUTE HERE (Tell me what it is, and we will name it)
+    // NEW_ENDPOINT: '/api/your_app/your_new_endpoint/',
   },
 
   STORAGE_KEYS: {
