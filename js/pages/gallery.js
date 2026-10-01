@@ -8,7 +8,7 @@ window.galleryPage = {
   // Mirrors backend accounts/permissions.py -> IsMarketerOrManagement
   WRITE_ROLES: ['CEO', 'LEAD_DEVELOPER', 'ADMIN', 'MARKETER'],
 
-  canWrite() {
+  canWrite() {                    
     return auth.hasRole(...this.WRITE_ROLES);
   },
 
