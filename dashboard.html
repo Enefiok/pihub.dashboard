@@ -67,6 +67,17 @@
       border-color: #444444 !important;      /* Subtle border */
     }
     
+    /* --- NEW FIX: Dropdown Options Visibility in Dark Mode --- */
+    [data-theme="dark"] select option {
+      background-color: #1e1e1e !important; /* Solid dark background for the dropdown list */
+      color: #ffffff !important;            /* White text */
+    }
+    [data-theme="dark"] select option:hover,
+    [data-theme="dark"] select option:checked {
+      background-color: var(--color-primary, #ea580c) !important;
+      color: #ffffff !important;
+    }
+    
     /* Make placeholders visible but dim */
     [data-theme="dark"] input::placeholder,
     [data-theme="dark"] textarea::placeholder {
@@ -74,7 +85,7 @@
       opacity: 1 !important;
     }
 
-    /* Fix for Quill Editor in dark mode (Keep editor white like paper, or make dark if preferred) */
+    /* Fix for Quill Editor in dark mode */
     [data-theme="dark"] .ql-editor {
       background-color: #ffffff !important; 
       color: #000000 !important;
