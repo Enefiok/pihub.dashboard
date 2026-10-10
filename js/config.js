@@ -1,9 +1,5 @@
 const CONFIG = {
-  // ✅ USE THIS FOR LOCAL DEVELOPMENT
-   //   API_BASE_URL: 'http://127.0.0.1:8000',
-  
-  // ✅ UNCOMMENT THIS LINE ONLY WHEN DEPLOYING TO PRODUCTION
-   API_BASE_URL: 'https://pihub-backend.onrender.com',
+  API_BASE_URL: 'https://pihub-backend.onrender.com',
 
   ENDPOINTS: {
     // Auth
@@ -42,10 +38,8 @@ const CONFIG = {
     SUBSCRIBERS: '/api/core/staff/subscribers/',
 
     // Payments
+    PAYMENTS: '/api/payments/',             // <-- ADD THIS LINE
     PAYMENT_WEBHOOK: '/api/payments/webhook/paystack/',
-    
-    // ✅ ADD YOUR NEW ROUTE HERE (Tell me what it is, and we will name it)
-    // NEW_ENDPOINT: '/api/your_app/your_new_endpoint/',
   },
 
   STORAGE_KEYS: {

@@ -162,6 +162,19 @@ window.blogPage = {
               <label class="form-label">Title</label>
               <input class="form-input" name="title" value="${isEdit ? post.title || '' : ''}" required />
             </div>
+            
+            <!-- ✅ NEW: SEO Meta Title -->
+            <div class="form-group">
+              <label class="form-label">SEO Meta Title <span class="optional-tag">(Max 70 chars, auto-generates if blank)</span></label>
+              <input class="form-input" name="meta_title" maxlength="70" value="${isEdit ? post.meta_title || '' : ''}" placeholder="e.g., How to Start Farming in Akwa Ibom | PIHUB" />
+            </div>
+            
+            <!-- ✅ NEW: SEO Meta Description -->
+            <div class="form-group">
+              <label class="form-label">SEO Meta Description <span class="optional-tag">(Max 160 chars)</span></label>
+              <textarea class="form-input" name="meta_description" maxlength="160" rows="2" placeholder="Brief summary for search engine results...">${isEdit ? post.meta_description || '' : ''}</textarea>
+            </div>
+
             <div class="form-group">
               <label class="form-label">Category</label>
               <select class="form-select" name="category">${categoryOptions}</select>
