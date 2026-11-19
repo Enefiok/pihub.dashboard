@@ -193,12 +193,12 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
 
-  <!-- CACHE BUSTER UPDATED TO v=5 -->
-  <script src="js/config.js?v=5"></script>
-  <script src="js/utils.js?v=5"></script>
-  <script src="js/api.js?v=5"></script>
-  <script src="js/auth.js?v=5"></script>
-  <script src="js/sidebar.js?v=5"></script>
+  <!-- CACHE BUSTER UPDATED TO v=6 -->
+  <script src="js/config.js?v=6"></script>
+  <script src="js/utils.js?v=6"></script>
+  <script src="js/api.js?v=6"></script>
+  <script src="js/auth.js?v=6"></script>
+  <script src="js/sidebar.js?v=6"></script>
   <script>
     // Guard: kick to login if no token
     auth.guardDashboard();
@@ -322,21 +322,25 @@
 
   </script>
 
-  <!-- Page modules (each self-registers a render function) - CACHE BUSTER UPDATED TO v=5 -->
-  <script src="js/pages/dashboard-home.js?v=5"></script>
-  <script src="js/pages/bookings.js?v=5"></script>
-  <script src="js/pages/workspace-tags.js?v=5"></script>
-  <script src="js/pages/workspace-plans.js?v=5"></script>
-  <script src="js/pages/courses.js?v=5"></script>
-  <script src="js/pages/students.js?v=5"></script>
-  <script src="js/pages/certificates.js?v=5"></script>
-  <script src="js/pages/customers.js?v=5"></script>
-  <script src="js/pages/payments.js?v=5"></script>
-  <script src="js/pages/blog.js?v=5"></script>
-  <script src="js/pages/gallery.js?v=5"></script>
-  <script src="js/pages/enquiries.js?v=5"></script>
-  <script src="js/pages/newsletters.js?v=5"></script>
-  <script src="js/pages/staff.js?v=5"></script>
+  <!-- Page modules (each self-registers a render function) - CACHE BUSTER UPDATED TO v=6 -->
+  <script src="js/pages/dashboard-home.js?v=6"></script>
+  <script src="js/pages/bookings.js?v=6"></script>
+  <script src="js/pages/workspace-tags.js?v=6"></script>
+  <script src="js/pages/workspace-plans.js?v=6"></script>
+  <script src="js/pages/courses.js?v=6"></script>
+  <script src="js/pages/students.js?v=6"></script>
+  <script src="js/pages/certificates.js?v=6"></script>
+  <script src="js/pages/customers.js?v=6"></script>
+  <script src="js/pages/payments.js?v=6"></script>
+  <script src="js/pages/blog.js?v=6"></script>
+  <script src="js/pages/gallery.js?v=6"></script>
+  <script src="js/pages/enquiries.js?v=6"></script>
+  <script src="js/pages/newsletters.js?v=6"></script>
+  <script src="js/pages/staff.js?v=6"></script>
+  <!-- Referral system: shared helpers must load before the referral pages -->
+  <script src="js/pages/referral-shared.js?v=6"></script>
+  <script src="js/pages/registrations.js?v=6"></script>
+  <script src="js/pages/referral-analytics.js?v=6"></script>
 
   <script>
     // Simple router — dispatches to the matching page module's render()
@@ -355,6 +359,8 @@
       'enquiries': window.enquiriesPage,
       'newsletters': window.newslettersPage,
       'staff': window.staffPage,
+      'registrations': window.registrationsPage,
+      'referral-analytics': window.referralAnalyticsPage,
     };
 
     const activeModule = PAGE_MODULES[currentPage];

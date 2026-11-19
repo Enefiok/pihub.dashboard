@@ -68,6 +68,7 @@ const api = {
     if (!data) return null;
     if (typeof data.detail === 'string') return data.detail;
     if (typeof data.message === 'string') return data.message;
+    if (typeof data.error === 'string') return data.error;
     // DRF field errors: { field: ["msg"] }
     const firstKey = Object.keys(data)[0];
     if (firstKey && Array.isArray(data[firstKey])) {

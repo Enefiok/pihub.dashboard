@@ -12,6 +12,8 @@ const SIDEBAR_LINKS = [
   { id: 'certificates',    label: 'Certificates',    icon: 'award',     roles: null },
   { id: 'customers',       label: 'Customers',       icon: 'user',      roles: ['CEO', 'LEAD_DEVELOPER', 'ADMIN', 'RECEPTIONIST'] },
   { id: 'payments',        label: 'Payments',        icon: 'credit-card', roles: ['CEO', 'LEAD_DEVELOPER', 'ADMIN'] },
+  { id: 'registrations',      label: 'Registrations',      icon: 'clipboard', roles: ['CEO', 'LEAD_DEVELOPER', 'LEAD DEVELOPER', 'ADMIN'] },
+  { id: 'referral-analytics', label: 'Referral Analytics', icon: 'bar-chart', roles: ['CEO', 'LEAD_DEVELOPER', 'LEAD DEVELOPER', 'ADMIN'] },
   { id: 'blog',            label: 'Blog Posts',      icon: 'file-text', roles: null },
   { id: 'gallery',         label: 'Gallery',         icon: 'image',     roles: null },
   { id: 'enquiries',       label: 'Enquiries',       icon: 'inbox',     roles: null },
@@ -59,6 +61,8 @@ const sidebar = {
       inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z"/>',
       mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/>',
       shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>',
+      clipboard: '<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 12h6M9 16h6"/>',
+      'bar-chart': '<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>',
     };
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icons[name] || ''}</svg>`;
   },

@@ -40,6 +40,15 @@ const CONFIG = {
     // Payments
     PAYMENTS: '/api/payments/',             // <-- ADD THIS LINE
     PAYMENT_WEBHOOK: '/api/payments/webhook/paystack/',
+
+    // Referrals (influencers, codes, registrations, analytics)
+    // Detail routes append the id and a trailing slash.
+    // Single status change: PATCH REFERRAL_REGISTRATIONS + '{id}/status/'
+    REFERRAL_INFLUENCERS: '/api/referrals/influencers/',
+    REFERRAL_CODES: '/api/referrals/codes/',
+    REFERRAL_REGISTRATIONS: '/api/referrals/registrations/',
+    REFERRAL_REGISTRATION_ACTION: '/api/referrals/registrations/action/',
+    REFERRAL_ANALYTICS: '/api/referrals/analytics/',
   },
 
   STORAGE_KEYS: {
