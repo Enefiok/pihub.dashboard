@@ -41,6 +41,14 @@ window.coursesPage = {
     }
   },
 
+  // Formats a decimal string such as "10000.00" as Naira with thousands separators.
+  formatPrice(value) {
+    if (value === undefined || value === null || value === '') return '—';
+    const n = Number(value);
+    if (!Number.isFinite(n)) return '—';
+    return utils.formatCurrency(n);
+  },
+
   renderTable() {
     const target = document.getElementById('courses-table-container');
     if (this.state.data.length === 0) {
@@ -54,7 +62,7 @@ window.coursesPage = {
 
     target.innerHTML = `
       <table class="data-table">
-        <thead><tr><th>Title</th><th>Duration</th><th>Status</th><th>Requirements</th><th>Image</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Title</th><th>Duration</th><th>Price</th><th>Status</th><th>Requirements</th><th>Image</th><th>Actions</th></tr></thead>
         <tbody>
           ${this.state.data.map(c => {
             // Determine if current user can edit/delete this specific course
@@ -78,6 +86,7 @@ window.coursesPage = {
             <tr>
               <td>${c.title || '—'}</td>
               <td>${c.duration || '—'}</td>
+              <td>${this.formatPrice(c.price)}</td>
               <td><span class="badge ${utils.badgeClassForStatus(c.status)}">${c.status || '—'}</span></td>
               <td>${c.requirements ? 'Yes' : 'No'}</td>
               <td>${c.image ? `<img src="${c.image}" style="width:36px;height:36px;object-fit:cover;border-radius:6px;" />` : '—'}</td>
@@ -171,6 +180,10 @@ window.coursesPage = {
               <input class="form-input" name="duration" value="${isEdit ? course.duration || '' : ''}" required />
             </div>
             <div class="form-group">
+              <label class="form-label">Price <span class="optional-tag">(Naira)</span></label>
+              <input class="form-input" type="number" name="price" min="0" step="0.01" placeholder="e.g. 10000" value="${isEdit && course.price !== null && course.price !== undefined ? course.price : ''}" required />
+            </div>
+            <div class="form-group">
               <label class="form-label">Requirements <span class="optional-tag">(optional)</span></label>
               <textarea class="form-textarea" name="requirements" rows="2">${isEdit ? course.requirements || '' : ''}</textarea>
             </div>
@@ -214,6 +227,12 @@ window.coursesPage = {
     overlay.querySelector('#course-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const formData = new FormData(e.target);
+
+      const priceValue = Number(String(formData.get('price') || '').trim());
+      if (String(formData.get('price') || '').trim() === '' || !Number.isFinite(priceValue) || priceValue < 0) {
+        toast.error('Enter a valid price of 0 or more.');
+        return;
+      }
 
       const descriptionHtml = this.quillInstance.root.innerHTML;
       const isEmptyDescription = this.quillInstance.getText().trim().length === 0;

@@ -104,6 +104,48 @@
     .rf-detail-item dd { margin: 0; font-size: 14px; word-break: break-word; }
     .rf-confirm-text { margin: 0 0 10px; font-size: 14px; }
     .rf-hidden { display: none !important; }
+
+    /* forms */
+    .rf-form .form-group { margin-bottom: 14px; }
+    .rf-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+    @media (max-width: 560px) { .rf-form-grid { grid-template-columns: 1fr; } }
+    .rf-req { color: var(--color-danger, #dc2626); }
+    .rf-hint { font-size: 12px; opacity: 0.7; margin-top: 4px; }
+    .rf-field-error { color: var(--color-danger, #dc2626); font-size: 12px; margin-top: 4px; }
+    .rf-field-error:empty { display: none; }
+    .rf-form-error {
+      color: var(--color-danger, #dc2626);
+      border: 1px solid var(--color-danger, #dc2626);
+      border-radius: var(--radius-md, 8px);
+      padding: 8px 12px;
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+    .rf-form .rf-invalid { border-color: var(--color-danger, #dc2626) !important; }
+    .rf-inline-check { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
+    .rf-check-list {
+      max-height: 180px; overflow: auto;
+      display: flex; flex-direction: column; gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--color-grey-100, #e5e7eb);
+      border-radius: var(--radius-md, 8px);
+    }
+    .btn.rf-danger-outline {
+      background: transparent;
+      color: var(--color-danger, #dc2626);
+      border-color: var(--color-danger, #dc2626);
+    }
+    .rf-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 600; }
+    .rf-code-cell { display: flex; align-items: center; gap: 8px; }
+    .rf-code-box {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 26px; font-weight: 700; letter-spacing: 0.08em;
+      text-align: center; word-break: break-all;
+      padding: 16px; margin: 12px 0 16px;
+      border: 2px dashed var(--color-primary, #ea580c);
+      border-radius: var(--radius-md, 8px);
+    }
+    .rf-toolbar-end { margin-left: auto; }
   `;
 
   const shared = {
@@ -263,6 +305,123 @@
         </div>`;
     },
 
+    /* ---------- forms ---------- */
+    flattenError(value) {
+      if (value === null || value === undefined) return '';
+      if (typeof value === 'string') return value;
+      if (Array.isArray(value)) return value.map((v) => this.flattenError(v)).filter(Boolean).join(' ');
+      if (typeof value === 'object') {
+        return Object.keys(value).map((k) => this.flattenError(value[k])).filter(Boolean).join(' ');
+      }
+      return String(value);
+    },
+
+    // Splits an ApiError into per-field messages and one general message.
+    // fieldNames lists the form field names that have an error slot.
+    parseFormErrors(err, fieldNames) {
+      const out = { fields: {}, general: '' };
+      const data = err && err.data && typeof err.data === 'object' && !Array.isArray(err.data) ? err.data : null;
+      if (!data) {
+        out.general = this.errMsg(err);
+        return out;
+      }
+      const general = [];
+      Object.keys(data).forEach((key) => {
+        const msg = this.flattenError(data[key]);
+        if (!msg) return;
+        if (fieldNames.indexOf(key) !== -1) out.fields[key] = msg;
+        else general.push(msg);
+      });
+      out.general = general.join(' ');
+      if (!Object.keys(out.fields).length && !out.general) out.general = this.errMsg(err);
+      return out;
+    },
+
+    clearFormErrors(form) {
+      form.querySelectorAll('[data-error-for]').forEach((el) => { el.textContent = ''; });
+      form.querySelectorAll('.rf-invalid').forEach((el) => el.classList.remove('rf-invalid'));
+      const general = form.querySelector('[data-form-error]');
+      if (general) {
+        general.textContent = '';
+        general.classList.add('rf-hidden');
+      }
+    },
+
+    // parsed = { fields: { name: 'message' }, general: 'message' }. Uses textContent, so it is safe.
+    showFormErrors(form, parsed) {
+      this.clearFormErrors(form);
+      let first = null;
+      const general = [];
+      if (parsed.general) general.push(parsed.general);
+
+      Object.keys(parsed.fields || {}).forEach((name) => {
+        const slot = form.querySelector(`[data-error-for="${name}"]`);
+        if (!slot) {
+          general.push(parsed.fields[name]);
+          return;
+        }
+        slot.textContent = parsed.fields[name];
+        const input = form.querySelector(`[name="${name}"]`);
+        if (input) {
+          input.classList.add('rf-invalid');
+          if (!first) first = input;
+        }
+      });
+
+      const box = form.querySelector('[data-form-error]');
+      if (box && general.length) {
+        box.textContent = general.join(' ');
+        box.classList.remove('rf-hidden');
+      }
+      if (first && typeof first.focus === 'function') first.focus();
+    },
+
+    // Disables or re-enables every control in a form while a request runs.
+    setFormBusy(form, busy, saveLabel) {
+      form.querySelectorAll('input, select, textarea, button').forEach((el) => { el.disabled = busy; });
+      const save = form.querySelector('[data-rf-save]');
+      if (save) {
+        if (busy) {
+          save.dataset.label = save.textContent;
+          save.textContent = 'Saving...';
+        } else {
+          save.textContent = saveLabel || save.dataset.label || 'Save';
+        }
+      }
+    },
+
+    // Converts an ISO string to the value format of <input type="datetime-local"> (local time).
+    toDateTimeLocal(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return '';
+      const p = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+    },
+
+    async copyText(text) {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          return true;
+        }
+      } catch (e) { /* fall through to the legacy path */ }
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand('copy');
+        ta.remove();
+        return ok;
+      } catch (e) {
+        return false;
+      }
+    },
+
     /* ---------- modal + confirm ---------- */
     bindKeys() {
       if (keysBound) return;
@@ -371,6 +530,31 @@
           handle.close();
         });
       });
+    },
+
+    // Information dialog shown when the server refuses a delete (400 or 409).
+    // The server message is shown as is; onAlt (optional) offers a safer action.
+    blockedDialog({ title, message, hint, altLabel, onAlt }) {
+      const handle = this.modal({
+        title,
+        width: 440,
+        bodyHtml: `
+          <p class="rf-confirm-text rf-error-text">${this.esc(message)}</p>
+          ${hint ? `<p class="rf-confirm-text">${this.esc(hint)}</p>` : ''}
+          <div class="modal-footer">
+            ${onAlt ? `<button type="button" class="btn btn-primary" data-rf-alt>${this.esc(altLabel || 'Continue')}</button>` : ''}
+            <button type="button" class="btn btn-secondary" data-rf-close>Close</button>
+          </div>`,
+      });
+      handle.overlay.addEventListener('click', (e) => {
+        if (e.target.closest('[data-rf-close]')) {
+          handle.close();
+        } else if (e.target.closest('[data-rf-alt]')) {
+          handle.close();
+          if (typeof onAlt === 'function') onAlt();
+        }
+      });
+      return handle;
     },
   };
 

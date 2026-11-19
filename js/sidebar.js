@@ -14,6 +14,8 @@ const SIDEBAR_LINKS = [
   { id: 'payments',        label: 'Payments',        icon: 'credit-card', roles: ['CEO', 'LEAD_DEVELOPER', 'ADMIN'] },
   { id: 'registrations',      label: 'Registrations',      icon: 'clipboard', roles: ['CEO', 'LEAD_DEVELOPER', 'LEAD DEVELOPER', 'ADMIN'] },
   { id: 'referral-analytics', label: 'Referral Analytics', icon: 'bar-chart', roles: ['CEO', 'LEAD_DEVELOPER', 'LEAD DEVELOPER', 'ADMIN'] },
+  { id: 'influencers',        label: 'Influencers',        icon: 'user-plus', roles: ['CEO', 'LEAD_DEVELOPER', 'LEAD DEVELOPER', 'ADMIN'] },
+  { id: 'referral-codes',     label: 'Referral Codes',     icon: 'ticket',    roles: ['CEO', 'LEAD_DEVELOPER', 'LEAD DEVELOPER', 'ADMIN'] },
   { id: 'blog',            label: 'Blog Posts',      icon: 'file-text', roles: null },
   { id: 'gallery',         label: 'Gallery',         icon: 'image',     roles: null },
   { id: 'enquiries',       label: 'Enquiries',       icon: 'inbox',     roles: null },
@@ -63,6 +65,8 @@ const sidebar = {
       shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>',
       clipboard: '<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 12h6M9 16h6"/>',
       'bar-chart': '<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>',
+      'user-plus': '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>',
+      ticket: '<path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2M13 11v2M13 17v2"/>',
     };
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icons[name] || ''}</svg>`;
   },
