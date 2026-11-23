@@ -3,7 +3,7 @@
    ========================================================================== */
 
 window.galleryPage = {
-  state: { data: [] },
+  state: { data: [], page: 1, pageSize: 8 },
 
   // Mirrors backend accounts/permissions.py -> IsMarketerOrManagement
   WRITE_ROLES: ['CEO', 'LEAD_DEVELOPER', 'ADMIN', 'MARKETER'],
@@ -20,9 +20,10 @@ window.galleryPage = {
         <div></div>
         ${canWrite ? '<button class="btn btn-primary" id="add-image-btn">+ Upload Image</button>' : ''}
       </div>
-      <div id="gallery-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:var(--space-4);">
+      <div id="gallery-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(max(180px,calc((100% - 3 * var(--space-4)) / 4)),1fr));gap:var(--space-4);">
         ${Array.from({ length: 4 }).map(() => `<div class="skeleton" style="height:140px;border-radius:12px;"></div>`).join('')}
       </div>
+      <div id="gallery-pagination"></div>
     `;
 
     if (canWrite) {
@@ -38,6 +39,8 @@ window.galleryPage = {
       this.state.data = data.results || data || [];
       this.renderGrid();
     } catch (err) {
+      const pagerEl = document.getElementById('gallery-pagination');
+      if (pagerEl) pagerEl.innerHTML = '';
       target.innerHTML = `<div class="empty-state"><h3>Couldn't load gallery</h3><p>${err.message}</p></div>`;
     }
   },
@@ -45,13 +48,25 @@ window.galleryPage = {
   renderGrid() {
     const target = document.getElementById('gallery-grid');
     const canWrite = this.canWrite();
+    const pager = document.getElementById('gallery-pagination');
 
     if (this.state.data.length === 0) {
+      if (pager) pager.innerHTML = '';
       target.innerHTML = `<div class="empty-state"><h3>No images yet</h3><p>${canWrite ? 'Click "Upload Image" to add your first one.' : 'Check back later.'}</p></div>`;
       return;
     }
 
-    target.innerHTML = this.state.data.map(img => `
+    // Pagination: show only `pageSize` images at a time (8 = two rows of 4)
+    const total = this.state.data.length;
+    const { pageSize } = this.state;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    this.state.page = Math.min(Math.max(1, this.state.page), totalPages);
+    const startIdx = (this.state.page - 1) * pageSize;
+    const pageItems = this.state.data.slice(startIdx, startIdx + pageSize);
+    const rangeStart = startIdx + 1;
+    const rangeEnd = startIdx + pageItems.length;
+
+    target.innerHTML = pageItems.map(img => `
       <div class="card" style="padding:0;overflow:hidden;">
         <img src="${img.image}" style="width:100%;height:120px;object-fit:cover;" />
         <div style="padding:var(--space-3);">
@@ -69,6 +84,24 @@ window.galleryPage = {
         </div>
       </div>
     `).join('');
+
+    pager.innerHTML = `
+      <div class="table-pagination" style="margin-top:var(--space-4);padding-left:0;padding-right:0;">
+        <span class="table-pagination-info">${rangeStart}–${rangeEnd} of ${total}</span>
+        <div class="table-pagination-controls">
+          <button class="btn btn-sm btn-secondary" id="gallery-prev" ${this.state.page <= 1 ? 'disabled' : ''}>Previous</button>
+          <button class="btn btn-sm btn-secondary" id="gallery-next" ${this.state.page >= totalPages ? 'disabled' : ''}>Next</button>
+        </div>
+      </div>
+    `;
+    pager.querySelector('#gallery-prev').addEventListener('click', () => {
+      this.state.page -= 1;
+      this.renderGrid();
+    });
+    pager.querySelector('#gallery-next').addEventListener('click', () => {
+      this.state.page += 1;
+      this.renderGrid();
+    });
 
     if (!canWrite) return;
 
