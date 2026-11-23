@@ -3,7 +3,7 @@
    ========================================================================== */
 
 window.enquiriesPage = {
-  state: { data: [], filterStatus: '' },
+  state: { data: [], filterStatus: '', page: 1, pageSize: 5 },
 
   // Mirrors backend accounts/permissions.py -> IsManagementOrReadOnly
   // (assumed — enquiries has no dedicated permission class in what you shared,
@@ -34,6 +34,7 @@ window.enquiriesPage = {
 
     document.getElementById('enquiry-status-filter').addEventListener('change', (e) => {
       this.state.filterStatus = e.target.value;
+      this.state.page = 1;
       this.load();
     });
 
@@ -61,11 +62,21 @@ window.enquiriesPage = {
       return;
     }
 
+    // Pagination: show only `pageSize` enquiries at a time
+    const total = this.state.data.length;
+    const { pageSize } = this.state;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    this.state.page = Math.min(Math.max(1, this.state.page), totalPages);
+    const startIdx = (this.state.page - 1) * pageSize;
+    const pageItems = this.state.data.slice(startIdx, startIdx + pageSize);
+    const rangeStart = startIdx + 1;
+    const rangeEnd = startIdx + pageItems.length;
+
     target.innerHTML = `
       <table class="data-table">
         <thead><tr><th>Name</th><th>Email</th><th>Service</th><th>Subject</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>
-          ${this.state.data.map(e => `
+          ${pageItems.map(e => `
             <tr data-id="${e.id}" style="cursor:pointer;" class="enquiry-row">
               <td>${e.name || '—'}</td>
               <td>${e.email || '—'}</td>
@@ -84,7 +95,23 @@ window.enquiriesPage = {
           `).join('')}
         </tbody>
       </table>
+      <div class="table-pagination">
+        <span class="table-pagination-info">${rangeStart}–${rangeEnd} of ${total}</span>
+        <div class="table-pagination-controls">
+          <button class="btn btn-sm btn-secondary" id="enquiries-prev" ${this.state.page <= 1 ? 'disabled' : ''}>Previous</button>
+          <button class="btn btn-sm btn-secondary" id="enquiries-next" ${this.state.page >= totalPages ? 'disabled' : ''}>Next</button>
+        </div>
+      </div>
     `;
+
+    target.querySelector('#enquiries-prev').addEventListener('click', () => {
+      this.state.page -= 1;
+      this.renderTable();
+    });
+    target.querySelector('#enquiries-next').addEventListener('click', () => {
+      this.state.page += 1;
+      this.renderTable();
+    });
 
     utils.qsa('.view-btn', target).forEach(btn => {
       btn.addEventListener('click', (ev) => {

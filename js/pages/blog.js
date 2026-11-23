@@ -3,7 +3,7 @@
    ========================================================================== */
 
 window.blogPage = {
-  state: { data: [], categories: [] },
+  state: { data: [], categories: [], page: 1, pageSize: 5 },
   quillInstance: null,
 
   // Mirrors backend accounts/permissions.py -> IsMarketerOrManagement
@@ -54,11 +54,21 @@ window.blogPage = {
       return;
     }
 
+    // Pagination: show only `pageSize` posts at a time
+    const total = this.state.data.length;
+    const { pageSize } = this.state;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    this.state.page = Math.min(Math.max(1, this.state.page), totalPages);
+    const startIdx = (this.state.page - 1) * pageSize;
+    const pageItems = this.state.data.slice(startIdx, startIdx + pageSize);
+    const rangeStart = startIdx + 1;
+    const rangeEnd = startIdx + pageItems.length;
+
     target.innerHTML = `
       <table class="data-table">
         <thead><tr><th>Title</th><th>Author</th><th>Category</th><th>Status</th><th>Slug</th>${canWrite ? '<th>Actions</th>' : ''}</tr></thead>
         <tbody>
-          ${this.state.data.map(p => `
+          ${pageItems.map(p => `
             <tr>
               <td>${p.title || '—'}</td>
               <td>${p.author_name || '—'}</td>
@@ -75,7 +85,23 @@ window.blogPage = {
           `).join('')}
         </tbody>
       </table>
+      <div class="table-pagination">
+        <span class="table-pagination-info">${rangeStart}–${rangeEnd} of ${total}</span>
+        <div class="table-pagination-controls">
+          <button class="btn btn-sm btn-secondary" id="blog-prev" ${this.state.page <= 1 ? 'disabled' : ''}>Previous</button>
+          <button class="btn btn-sm btn-secondary" id="blog-next" ${this.state.page >= totalPages ? 'disabled' : ''}>Next</button>
+        </div>
+      </div>
     `;
+
+    target.querySelector('#blog-prev').addEventListener('click', () => {
+      this.state.page -= 1;
+      this.renderTable();
+    });
+    target.querySelector('#blog-next').addEventListener('click', () => {
+      this.state.page += 1;
+      this.renderTable();
+    });
 
     if (!canWrite) return;
 

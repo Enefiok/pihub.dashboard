@@ -20,6 +20,8 @@
   let loading = false;
   let acting = false;
   let reqId = 0;
+  let page = 1;
+  const PAGE_SIZE = 5;
   const filters = { search: '', is_active: '' };
 
   function q(selector) {
@@ -83,6 +85,15 @@
       return;
     }
 
+    // Pagination: show only PAGE_SIZE influencers at a time
+    const total = rows.length;
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    page = Math.min(Math.max(1, page), totalPages);
+    const startIdx = (page - 1) * PAGE_SIZE;
+    const pageItems = rows.slice(startIdx, startIdx + PAGE_SIZE);
+    const rangeStart = startIdx + 1;
+    const rangeEnd = startIdx + pageItems.length;
+
     content.innerHTML = `
       <div class="table-wrapper">
         <table class="data-table">
@@ -98,7 +109,7 @@
             </tr>
           </thead>
           <tbody>
-            ${rows.map((r) => {
+            ${pageItems.map((r) => {
               const id = S.esc(r.id);
               const active = r.is_active !== false;
               return `
@@ -120,6 +131,13 @@
             }).join('')}
           </tbody>
         </table>
+        <div class="table-pagination">
+          <span class="table-pagination-info">${rangeStart}–${rangeEnd} of ${total}</span>
+          <div class="table-pagination-controls">
+            <button type="button" class="btn btn-sm btn-secondary" data-act="page-prev" ${page <= 1 ? 'disabled' : ''}>Previous</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-act="page-next" ${page >= totalPages ? 'disabled' : ''}>Next</button>
+          </div>
+        </div>
       </div>`;
   }
 
@@ -358,6 +376,7 @@
       q('#inf-active').value = '';
       filters.search = '';
       filters.is_active = '';
+      page = 1;
       return load();
     }
 
@@ -369,17 +388,24 @@
     } else if (act === 'deactivate') setActive(btn.dataset.id, false);
     else if (act === 'activate') setActive(btn.dataset.id, true);
     else if (act === 'delete') deleteInfluencer(btn.dataset.id);
+    else if (act === 'page-prev' || act === 'page-next') {
+      page += act === 'page-next' ? 1 : -1;
+      renderTable();
+      applyLocks(); // re-apply busy lock to the freshly rendered action buttons
+    }
   }
 
   function onChange(e) {
     if (e.target.id === 'inf-active') {
       filters.is_active = e.target.value;
+      page = 1;
       load();
     }
   }
 
   const onSearchInput = utils.debounce(() => {
     filters.search = q('#inf-search').value.trim();
+    page = 1;
     load();
   }, 400);
 
@@ -394,6 +420,7 @@
 
     root = container;
     rows = [];
+    page = 1;
     filters.search = '';
     filters.is_active = '';
 

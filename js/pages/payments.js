@@ -7,7 +7,7 @@
    ========================================================================== */
 
 window.paymentsPage = {
-  state: { data: [] },
+  state: { data: [], page: 1, pageSize: 5 },
 
   async render(container) {
     container.innerHTML = `
@@ -43,11 +43,21 @@ window.paymentsPage = {
       return;
     }
 
+    // Pagination: show only `pageSize` payments at a time
+    const total = this.state.data.length;
+    const { pageSize } = this.state;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    this.state.page = Math.min(Math.max(1, this.state.page), totalPages);
+    const startIdx = (this.state.page - 1) * pageSize;
+    const pageItems = this.state.data.slice(startIdx, startIdx + pageSize);
+    const rangeStart = startIdx + 1;
+    const rangeEnd = startIdx + pageItems.length;
+
     target.innerHTML = `
       <table class="data-table">
         <thead><tr><th>Reference</th><th>Amount</th><th>Status</th><th>Booking</th><th>Date</th></tr></thead>
         <tbody>
-          ${this.state.data.map(p => `
+          ${pageItems.map(p => `
             <tr>
               <td style="font-family:monospace;font-size:var(--font-size-xs);">${p.reference || '—'}</td>
               <td>${utils.formatCurrency(p.amount)}</td>
@@ -58,6 +68,22 @@ window.paymentsPage = {
           `).join('')}
         </tbody>
       </table>
+      <div class="table-pagination">
+        <span class="table-pagination-info">${rangeStart}–${rangeEnd} of ${total}</span>
+        <div class="table-pagination-controls">
+          <button class="btn btn-sm btn-secondary" id="payments-prev" ${this.state.page <= 1 ? 'disabled' : ''}>Previous</button>
+          <button class="btn btn-sm btn-secondary" id="payments-next" ${this.state.page >= totalPages ? 'disabled' : ''}>Next</button>
+        </div>
+      </div>
     `;
+
+    target.querySelector('#payments-prev').addEventListener('click', () => {
+      this.state.page -= 1;
+      this.renderTable();
+    });
+    target.querySelector('#payments-next').addEventListener('click', () => {
+      this.state.page += 1;
+      this.renderTable();
+    });
   },
 };
