@@ -3,7 +3,7 @@
    ========================================================================== */
 
 window.bookingsPage = {
-  state: { data: [], filterStatus: '', search: '' },
+  state: { data: [], filterStatus: '', search: '', page: 1, pageSize: 5 },
 
   // Mirrors backend accounts/permissions.py -> IsManagementOrReceptionistCreateOnly
   // Create (walk-in) allowed for management + Receptionist; no edit/delete UI exists here.
@@ -46,11 +46,13 @@ window.bookingsPage = {
 
     document.getElementById('booking-search').addEventListener('input', utils.debounce((e) => {
       this.state.search = e.target.value.trim().toLowerCase();
+      this.state.page = 1;
       this.renderTable();
     }, 350));
 
     document.getElementById('booking-status-filter').addEventListener('change', (e) => {
       this.state.filterStatus = e.target.value;
+      this.state.page = 1;
       this.renderTable();
     });
 
@@ -89,6 +91,16 @@ window.bookingsPage = {
       return;
     }
 
+    // Pagination: show only `pageSize` bookings at a time (applies to filtered rows)
+    const total = rows.length;
+    const { pageSize } = this.state;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    this.state.page = Math.min(Math.max(1, this.state.page), totalPages);
+    const startIdx = (this.state.page - 1) * pageSize;
+    const pageItems = rows.slice(startIdx, startIdx + pageSize);
+    const rangeStart = startIdx + 1;
+    const rangeEnd = startIdx + pageItems.length;
+
     target.innerHTML = `
       <table class="data-table">
         <thead>
@@ -98,7 +110,7 @@ window.bookingsPage = {
           </tr>
         </thead>
         <tbody>
-          ${rows.map(b => `
+          ${pageItems.map(b => `
             <tr>
               <td>#${b.id ?? '—'}</td>
               <td>${b.customer_name || '—'}</td>
@@ -112,7 +124,23 @@ window.bookingsPage = {
           `).join('')}
         </tbody>
       </table>
+      <div class="table-pagination">
+        <span class="table-pagination-info">${rangeStart}–${rangeEnd} of ${total}</span>
+        <div class="table-pagination-controls">
+          <button class="btn btn-sm btn-secondary" id="bookings-prev" ${this.state.page <= 1 ? 'disabled' : ''}>Previous</button>
+          <button class="btn btn-sm btn-secondary" id="bookings-next" ${this.state.page >= totalPages ? 'disabled' : ''}>Next</button>
+        </div>
+      </div>
     `;
+
+    target.querySelector('#bookings-prev').addEventListener('click', () => {
+      this.state.page -= 1;
+      this.renderTable();
+    });
+    target.querySelector('#bookings-next').addEventListener('click', () => {
+      this.state.page += 1;
+      this.renderTable();
+    });
   },
 
   async openWalkInModal() {

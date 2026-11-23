@@ -3,7 +3,7 @@
    ========================================================================== */
 
 window.workspaceTagsPage = {
-  state: { data: [] },
+  state: { data: [], page: 1, pageSize: 5 },
 
   // Role permissions
   // Receptionists handle daily tag check-ins and releases; Management handles creation/deletion
@@ -67,6 +67,16 @@ window.workspaceTagsPage = {
       return;
     }
 
+    // Pagination: show only `pageSize` tags at a time
+    const total = this.state.data.length;
+    const { pageSize } = this.state;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    this.state.page = Math.min(Math.max(1, this.state.page), totalPages);
+    const startIdx = (this.state.page - 1) * pageSize;
+    const pageItems = this.state.data.slice(startIdx, startIdx + pageSize);
+    const rangeStart = startIdx + 1;
+    const rangeEnd = startIdx + pageItems.length;
+
     target.innerHTML = `
       <table class="data-table">
         <thead>
@@ -78,7 +88,7 @@ window.workspaceTagsPage = {
           </tr>
         </thead>
         <tbody>
-          ${this.state.data.map(t => `
+          ${pageItems.map(t => `
             <tr>
               <td style="font-family:monospace;">${t.tag_code || '—'}</td>
               <td><span class="badge ${t.is_available ? 'badge-success' : 'badge-warning'}">${t.is_available ? 'Available' : 'In Use'}</span></td>
@@ -94,7 +104,23 @@ window.workspaceTagsPage = {
           `).join('')}
         </tbody>
       </table>
+      <div class="table-pagination">
+        <span class="table-pagination-info">${rangeStart}–${rangeEnd} of ${total}</span>
+        <div class="table-pagination-controls">
+          <button class="btn btn-sm btn-secondary" id="tags-prev" ${this.state.page <= 1 ? 'disabled' : ''}>Previous</button>
+          <button class="btn btn-sm btn-secondary" id="tags-next" ${this.state.page >= totalPages ? 'disabled' : ''}>Next</button>
+        </div>
+      </div>
     `;
+
+    target.querySelector('#tags-prev').addEventListener('click', () => {
+      this.state.page -= 1;
+      this.renderTable();
+    });
+    target.querySelector('#tags-next').addEventListener('click', () => {
+      this.state.page += 1;
+      this.renderTable();
+    });
 
     if (!canWrite) return;
 
