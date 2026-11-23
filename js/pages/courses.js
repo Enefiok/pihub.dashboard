@@ -3,7 +3,7 @@
    ========================================================================== */
 
 window.coursesPage = {
-  state: { data: [] },
+  state: { data: [], page: 1, pageSize: 5 },
   quillInstance: null,
 
   async render(container) {
@@ -60,11 +60,21 @@ window.coursesPage = {
     const isManagement = currentUser && ['CEO', 'LEAD_DEVELOPER', 'ADMIN'].includes(currentUser.role);
     const isInstructor = currentUser && currentUser.role === 'INSTRUCTOR';
 
+    // Pagination: show only `pageSize` courses at a time
+    const total = this.state.data.length;
+    const { pageSize } = this.state;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    this.state.page = Math.min(Math.max(1, this.state.page), totalPages);
+    const startIdx = (this.state.page - 1) * pageSize;
+    const pageItems = this.state.data.slice(startIdx, startIdx + pageSize);
+    const rangeStart = startIdx + 1;
+    const rangeEnd = startIdx + pageItems.length;
+
     target.innerHTML = `
       <table class="data-table">
         <thead><tr><th>Title</th><th>Duration</th><th>Price</th><th>Status</th><th>Requirements</th><th>Image</th><th>Actions</th></tr></thead>
         <tbody>
-          ${this.state.data.map(c => {
+          ${pageItems.map(c => {
             // Determine if current user can edit/delete this specific course
             let canEdit = false;
             let canDelete = false;
@@ -100,7 +110,23 @@ window.coursesPage = {
           }).join('')}
         </tbody>
       </table>
+      <div class="table-pagination">
+        <span class="table-pagination-info">${rangeStart}–${rangeEnd} of ${total}</span>
+        <div class="table-pagination-controls">
+          <button class="btn btn-sm btn-secondary" id="courses-prev" ${this.state.page <= 1 ? 'disabled' : ''}>Previous</button>
+          <button class="btn btn-sm btn-secondary" id="courses-next" ${this.state.page >= totalPages ? 'disabled' : ''}>Next</button>
+        </div>
+      </div>
     `;
+
+    target.querySelector('#courses-prev').addEventListener('click', () => {
+      this.state.page -= 1;
+      this.renderTable();
+    });
+    target.querySelector('#courses-next').addEventListener('click', () => {
+      this.state.page += 1;
+      this.renderTable();
+    });
 
     utils.qsa('.edit-btn', target).forEach(btn => {
       btn.addEventListener('click', () => {
