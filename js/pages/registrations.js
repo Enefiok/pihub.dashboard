@@ -41,6 +41,8 @@
   let acting = false;
   let reqId = 0;
   let selected = new Set(); // string ids of selected pending rows
+  let menuEl = null; // the open row-actions dropdown (floating, lives on <body>)
+  let menuBtn = null; // the three-dots button that opened it
 
   const filters = { search: '', course: '', status: '', influencer: '', start_date: '', end_date: '' };
 
@@ -259,18 +261,127 @@
     return load();
   }
 
+  /* ---------- row actions menu (three-dots dropdown) ---------- */
+  // The menu is a floating element positioned next to the button, so the table's
+  // scroll wrapper can never clip it (even on the last rows).
+  function injectMenuStyles() {
+    if (document.getElementById('rg-menu-styles')) return;
+    const st = document.createElement('style');
+    st.id = 'rg-menu-styles';
+    st.textContent = `
+      .rg-kebab { width: 32px; height: 32px; padding: 0 !important; display: inline-flex; align-items: center; justify-content: center; }
+      .rg-menu {
+        position: fixed; z-index: 1100; min-width: 170px; padding: 4px;
+        background: var(--color-white, #fff);
+        border: 1px solid var(--color-grey-100, #e5e5e5);
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      }
+      .rg-menu button {
+        display: block; width: 100%; text-align: left; padding: 8px 12px;
+        background: none; border: 0; border-radius: 6px; cursor: pointer;
+        font-size: 14px; color: var(--color-grey-900, #333);
+      }
+      .rg-menu button:hover, .rg-menu button:focus-visible { background: var(--color-grey-50, #f5f5f5); outline: none; }
+      .rg-menu button.rg-menu-danger { color: var(--color-danger, #e0453c); }
+    `;
+    document.head.appendChild(st);
+  }
+
+  function onMenuDocClick(e) {
+    if (!menuEl) return;
+    if (menuEl.contains(e.target) || e.target.closest('[data-menu-toggle]')) return;
+    closeMenu();
+  }
+
+  function onMenuKey(e) {
+    if (e.key !== 'Escape') return;
+    const btn = menuBtn;
+    closeMenu();
+    if (btn) btn.focus();
+  }
+
+  function onMenuDismiss() {
+    closeMenu();
+  }
+
+  function closeMenu() {
+    if (menuEl) {
+      menuEl.remove();
+      menuEl = null;
+    }
+    if (menuBtn) {
+      menuBtn.setAttribute('aria-expanded', 'false');
+      menuBtn = null;
+    }
+    document.removeEventListener('click', onMenuDocClick);
+    document.removeEventListener('keydown', onMenuKey);
+    window.removeEventListener('resize', onMenuDismiss);
+    window.removeEventListener('scroll', onMenuDismiss, true);
+  }
+
+  function openMenu(btn) {
+    closeMenu();
+    const id = btn.dataset.id;
+    const pending = btn.dataset.pending === '1';
+
+    menuEl = document.createElement('div');
+    menuEl.className = 'rg-menu';
+    menuEl.setAttribute('role', 'menu');
+    menuEl.innerHTML = `
+      <button type="button" role="menuitem" data-act="view">View</button>
+      ${pending ? `
+        <button type="button" role="menuitem" data-act="paid">Mark paid</button>
+        <button type="button" role="menuitem" data-act="cancelled" class="rg-menu-danger">Mark cancelled</button>
+      ` : ''}
+    `;
+    document.body.appendChild(menuEl);
+
+    // Right-align under the button; flip above it if there is no room below.
+    const rect = btn.getBoundingClientRect();
+    const mw = menuEl.offsetWidth;
+    const mh = menuEl.offsetHeight;
+    const left = Math.max(8, Math.min(rect.right - mw, window.innerWidth - mw - 8));
+    let top = rect.bottom + 4;
+    if (top + mh > window.innerHeight - 8) top = Math.max(8, rect.top - mh - 4);
+    menuEl.style.left = `${left}px`;
+    menuEl.style.top = `${top}px`;
+
+    menuBtn = btn;
+    btn.setAttribute('aria-expanded', 'true');
+
+    menuEl.addEventListener('click', (ev) => {
+      const item = ev.target.closest('[data-act]');
+      if (!item) return;
+      const act = item.dataset.act;
+      closeMenu();
+      if (loading || acting) return;
+      if (act === 'view') openDetail(id);
+      else changeStatus(id, act);
+    });
+
+    document.addEventListener('click', onMenuDocClick);
+    document.addEventListener('keydown', onMenuKey);
+    window.addEventListener('resize', onMenuDismiss);
+    window.addEventListener('scroll', onMenuDismiss, true);
+
+    const first = menuEl.querySelector('button');
+    if (first) first.focus({ preventScroll: true });
+  }
+
+  function toggleMenu(btn) {
+    if (menuBtn === btn) closeMenu();
+    else openMenu(btn);
+  }
+
   /* ---------- rendering ---------- */
   function rowHtml(r) {
     const id = r.id === null ? '' : String(r.id);
     const pending = isPending(r);
-    const actions = `
-      <div class="rf-actions">
-        <button type="button" class="btn btn-secondary rf-btn-sm" data-act="view" data-id="${S.esc(id)}" data-lock>View</button>
-        ${pending ? `
-          <button type="button" class="btn btn-primary rf-btn-sm" data-act="paid" data-id="${S.esc(id)}" data-lock>Mark paid</button>
-          <button type="button" class="btn rf-danger rf-btn-sm" data-act="cancelled" data-id="${S.esc(id)}" data-lock>Mark cancelled</button>
-        ` : ''}
-      </div>`;
+    const actions = id ? `
+      <button type="button" class="btn btn-secondary rf-btn-sm rg-kebab" data-menu-toggle data-id="${S.esc(id)}" data-pending="${pending ? '1' : '0'}" aria-haspopup="menu" aria-expanded="false" aria-label="Open actions menu" title="Actions" data-lock>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="8" cy="3" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="13" r="1.5"/></svg>
+      </button>` : '';
 
     return `
       <tr class="${id ? 'rf-clickable' : ''}" data-id="${S.esc(id)}">
@@ -293,6 +404,7 @@
   }
 
   function renderTable() {
+    closeMenu();
     const content = q('#rg-content');
     if (!rows.length) {
       content.innerHTML = S.emptyHtml(
@@ -584,6 +696,7 @@
       if (btn.hasAttribute('data-page-dir')) return goPage(btn.dataset.pageDir);
       if (btn.hasAttribute('data-bulk')) return runBulk(btn.dataset.bulk);
       if (btn.hasAttribute('data-bulk-clear')) return clearSelection();
+      if (btn.hasAttribute('data-menu-toggle')) return toggleMenu(btn);
       if (btn.dataset.act) {
         if (btn.dataset.act === 'view') return openDetail(btn.dataset.id);
         return changeStatus(btn.dataset.id, btn.dataset.act);
@@ -630,6 +743,8 @@
   function render(container) {
     if (!S.ensureAccess(container)) return;
     S.injectStyles();
+    injectMenuStyles();
+    closeMenu();
 
     root = container;
     rows = [];
